@@ -32,9 +32,8 @@ def create_account():
 
     accounts[acc_no] = {"name": name, "balance": deposit}
     save_accounts(accounts)
-    print(f"Account created. A/C No: {acc_no} | Balance: {deposit}")
-
-# --- Ye line sabse important hai, iske bina code chalega hi nahi ---
+    print(f"Account created. A/C No: {acc_no} | Balance: {deposit}
+    
 print("1. Create Account")
 choice = input("Enter your choice: ")
 
@@ -57,7 +56,6 @@ def save_accounts(accounts):
         for acc_no, data in accounts.items():
             f.write(f"{acc_no},{data['name']},{data['balance']}\n")
 
-# Test Case 2 - Withdraw 1500 from 2000
 accounts = load_accounts()
 accounts[1001] = {"name": "Anil", "balance": 2000}
 save_accounts(accounts)
