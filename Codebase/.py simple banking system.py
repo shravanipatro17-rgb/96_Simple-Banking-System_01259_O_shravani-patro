@@ -1,102 +1,255 @@
+import os
+
+# Minimum balance
+MIN_BALANCE = 500
+
+# File name
+FILE_NAME = "bank.txt"
+
+# Dictionary to store account details
+accounts = {}
+
+
+# Load accounts from file
 def load_accounts():
-    accounts = {}
-    try:
-        with open("bank.txt", "r") as f:
-            for line in f:
-                parts = line.strip().split(",")
-                if len(parts) == 3:
-                    accounts[int(parts[0])] = {"name": parts[1], "balance": float(parts[2])}
-    except FileNotFoundError:
-        pass
-    return accounts
+    global accounts
 
-def save_accounts(accounts):
-    with open("bank.txt", "w") as f:
-        for acc_no, data in accounts.items():
-            f.write(f"{acc_no},{data['name']},{data['balance']}\n")
+    if os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "r") as file:
+            for line in file:
+                data = line.strip().split("|")
 
+                if len(data) == 3:
+                    acc_no = int(data[0])
+                    name = data[1]
+                    balance = float(data[2])
+
+                    accounts[acc_no] = {
+                        "name": name,
+                        "balance": balance
+                    }
+
+
+# Save accounts to file
+def save_accounts():
+    with open(FILE_NAME, "w") as file:
+        for acc_no, details in accounts.items():
+            file.write(
+                f"{acc_no}|{details['name']}|{details['balance']}\n"
+            )
+
+
+# Generate unique account number
+def generate_account_number():
+    if not accounts:
+        return 1001
+
+    return max(accounts.keys()) + 1
+
+
+# Create new account
 def create_account():
-    name = input("Enter Name: ")
-    deposit = float(input("Enter Opening deposit: "))
+    name = input("Enter customer name: ").strip()
 
-    accounts = load_accounts()
-
-    if deposit < 500:
-        print("Minimum Rs.500 required")
+    if not name:
+        print("Invalid name!")
         return
 
-    if len(accounts) == 0:
-        acc_no = 1001
-    else:
-        acc_no = max(accounts.keys()) + 1
-
-    accounts[acc_no] = {"name": name, "balance": deposit}
-    save_accounts(accounts)
-    print(f"Account created. A/C No: {acc_no} | Balance: {deposit}
-    
-print("1. Create Account")
-choice = input("Enter your choice: ")
-
-if choice == "1":
-    create_account()
-    def load_accounts():
-    accounts = {}
     try:
-        with open("bank.txt", "r") as f:
-            for line in f:
-                parts = line.strip().split(",")
-                if len(parts) == 3:
-                    accounts[int(parts[0])] = {"name": parts[1], "balance": float(parts[2])}
-    except FileNotFoundError:
-        pass
-    return accounts
+        deposit = float(input("Enter opening deposit: "))
 
-def save_accounts(accounts):
-    with open("bank.txt", "w") as f:
-        for acc_no, data in accounts.items():
-            f.write(f"{acc_no},{data['name']},{data['balance']}\n")
+        if deposit < MIN_BALANCE:
+            print("Minimum opening balance must be Rs.500.")
+            return
 
-accounts = load_accounts()
-accounts[1001] = {"name": "Anil", "balance": 2000}
-save_accounts(accounts)
+        if deposit <= 0:
+            print("Invalid deposit amount.")
+            return
 
-acc_no = int(input("Enter A/C No: "))  # 1001
-amount = float(input("Enter Withdraw Amount: "))  # 1500
+        acc_no = generate_account_number()
 
-accounts = load_accounts()
-if accounts[acc_no]["balance"] - amount >= 500:
-    accounts[acc_no]["balance"] -= amount
-    save_accounts(accounts)
-    print(f"Withdrawal successful. Balance: {accounts[acc_no]['balance']}")
-else:
-    print("Minimum Rs.500 balance required. Withdrawal cancelled.")
-    accounts = {1001: {"name": "Anil", "balance": 2000}}
+        accounts[acc_no] = {
+            "name": name,
+            "balance": deposit
+        }
 
-from_acc = int(input("Enter From A/C No: "))  # 1001
-to_acc = int(input("Enter To A/C No: "))  # 9999
-amount = float(input("Enter Transfer Amount: "))  # 100
+        save_accounts()
 
-if to_acc not in accounts:
-    print(f"Account {to_acc} not found. Transfer cancelled.")
-elif accounts[from_acc]["balance"] - amount < 500:
-    print("Minimum Rs.500 balance required. Transfer cancelled.")
-else:
-    accounts[from_acc]["balance"] -= amount
-    accounts[to_acc]["balance"] += amount
-    print("Transfer successful.")
-    accounts = {1001: {"name": "Anil", "balance": 2000},
-            1002: {"name": "Ravi", "balance": 3000}}
+        print("Account created successfully!")
+        print("A/C No:", acc_no)
+        print("Balance:", accounts[acc_no]["balance"])
 
-from_acc = int(input("Enter From A/C No: "))  # 1002
-to_acc = int(input("Enter To A/C No: "))  # 1001
-amount = float(input("Enter Transfer Amount: "))  # 1000
+    except ValueError:
+        print("Invalid input! Enter a valid amount.")
 
-if to_acc not in accounts:
-    print(f"Account {to_acc} not found. Transfer cancelled.")
-elif accounts[from_acc]["balance"] - amount < 500:
-    print("Minimum Rs.500 balance required. Transfer cancelled.")
-else:
-    accounts[from_acc]["balance"] -= amount
-    accounts[to_acc]["balance"] += amount
-    print(f"Transfer successful.")
-    print(f"{from_acc} balance: {accounts[from_acc]['balance']}
+
+# Deposit money
+def deposit_money():
+    try:
+        acc_no = int(input("Enter account number: "))
+
+        if acc_no not in accounts:
+            print("Account not found.")
+            return
+
+        amount = float(input("Enter deposit amount: "))
+
+        if amount <= 0:
+            print("Invalid deposit amount.")
+            return
+
+        accounts[acc_no]["balance"] += amount
+
+        save_accounts()
+
+        print("Deposit successful.")
+        print("New Balance:", accounts[acc_no]["balance"])
+
+    except ValueError:
+        print("Invalid input!")
+
+
+# Withdraw money
+def withdraw_money():
+    try:
+        acc_no = int(input("Enter account number: "))
+
+        if acc_no not in accounts:
+            print("Account not found.")
+            return
+
+        amount = float(input("Enter withdrawal amount: "))
+
+        if amount <= 0:
+            print("Invalid withdrawal amount.")
+            return
+
+        balance = accounts[acc_no]["balance"]
+
+        if balance - amount < MIN_BALANCE:
+            print("Insufficient balance!")
+            print("Minimum balance of Rs.500 must remain.")
+            return
+
+        accounts[acc_no]["balance"] -= amount
+
+        save_accounts()
+
+        print("Withdrawal successful.")
+        print("Balance:", accounts[acc_no]["balance"])
+
+    except ValueError:
+        print("Invalid input!")
+
+
+# Transfer money
+def transfer_money():
+    try:
+        sender = int(input("Enter sender account number: "))
+        receiver = int(input("Enter receiver account number: "))
+
+        if sender not in accounts:
+            print("Sender account not found. Transfer cancelled.")
+            return
+
+        if receiver not in accounts:
+            print(f"Account {receiver} not found. Transfer cancelled.")
+            return
+
+        if sender == receiver:
+            print("Cannot transfer to the same account.")
+            return
+
+        amount = float(input("Enter transfer amount: "))
+
+        if amount <= 0:
+            print("Invalid transfer amount.")
+            return
+
+        sender_balance = accounts[sender]["balance"]
+
+        if sender_balance - amount < MIN_BALANCE:
+            print("Insufficient balance! Transfer cancelled.")
+            return
+
+        accounts[sender]["balance"] -= amount
+        accounts[receiver]["balance"] += amount
+
+        save_accounts()
+
+        print("Transfer successful.")
+        print(sender, "balance:", accounts[sender]["balance"])
+        print(receiver, "balance:", accounts[receiver]["balance"])
+
+    except ValueError:
+        print("Invalid input!")
+
+
+# Balance enquiry
+def balance_enquiry():
+    try:
+        acc_no = int(input("Enter account number: "))
+
+        if acc_no not in accounts:
+            print("Account not found.")
+            return
+
+        print("\nAccount Details")
+        print("Account Number:", acc_no)
+        print("Account Holder:", accounts[acc_no]["name"])
+        print("Available Balance:", accounts[acc_no]["balance"])
+
+    except ValueError:
+        print("Invalid account number!")
+
+
+# Main menu
+def main():
+
+    load_accounts()
+
+    while True:
+
+        print("\n================================")
+        print("       SIMPLE BANKING SYSTEM")
+        print("================================")
+        print("1. Create Account")
+        print("2. Deposit Money")
+        print("3. Withdraw Money")
+        print("4. Transfer Money")
+        print("5. Balance Enquiry")
+        print("6. Exit")
+        print("================================")
+
+        try:
+            choice = int(input("Enter your choice: "))
+
+            if choice == 1:
+                create_account()
+
+            elif choice == 2:
+                deposit_money()
+
+            elif choice == 3:
+                withdraw_money()
+
+            elif choice == 4:
+                transfer_money()
+
+            elif choice == 5:
+                balance_enquiry()
+
+            elif choice == 6:
+                print("Thank you for using Simple Banking System!")
+                break
+
+            else:
+                print("Invalid choice! Please select 1 to 6.")
+
+        except ValueError:
+            print("Please enter a valid menu choice.")
+
+
+# Program execution
+if __name__ == "__main__":
+    main()
